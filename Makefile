@@ -1,6 +1,6 @@
 OBJS = main.o
 CFLAGS = $(shell pkg-config --cflags flac)
-LIBS = $(shell pkg-config --libs flac) -lm
+LIBS = $(shell pkg-config --libs flac)
 TARGET = flac
 
 all: $(TARGET)

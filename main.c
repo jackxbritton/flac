@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
+#include <string.h>
 #include <FLAC/stream_encoder.h>
 
 int main(int argc, char *argv[]) {
@@ -34,21 +34,29 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	// TODO Define a crude sine wave.
-	int buf_len = 44100;
-	FLAC__int32 *buf = malloc(buf_len * sizeof(FLAC__int32));
-	if (buf == NULL) return 1;
-	for (int i = 0; i < buf_len; i++) {
-		double frequency = 110.0;
-		buf[i] = sin(2.0*M_PI * (double) i/(frequency/buf_len)) * 8388608;
-	}
+	// Read values from stdin and process them.
+	while (1) {
 
-	// Process it.
-	ok = FLAC__stream_encoder_process_interleaved(encoder, buf, buf_len);
-	if (!ok) {
-		fprintf(stderr, "failed to process buffer\n");
-		FLAC__stream_encoder_delete(encoder);
-		return 1;
+		// ^C will cause scanf to exit with -1.
+		double x;
+		int status = scanf("%lf", &x);
+		if (status == -1) break;
+		if (status != 1 || x < -1.0 || x > 1.0) {
+			fprintf(stderr, "bad input from stdin\n");
+			FLAC__stream_encoder_delete(encoder);
+			return 1;
+		}
+
+		FLAC__int32 y = x * 8388608;
+
+		// Process it.
+		ok = FLAC__stream_encoder_process_interleaved(encoder, &y, 1);
+		if (!ok) {
+			fprintf(stderr, "failed to process buffer\n");
+			FLAC__stream_encoder_delete(encoder);
+			return 1;
+		}
+
 	}
 
 	// Finish.
@@ -60,6 +68,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	FLAC__stream_encoder_delete(encoder);
+	printf("all done!\n");
 	return 0;
 
 }
